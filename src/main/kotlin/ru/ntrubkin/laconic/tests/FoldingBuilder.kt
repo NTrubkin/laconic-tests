@@ -9,12 +9,12 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.impl.source.tree.JavaElementType.CODE_BLOCK
+import com.intellij.psi.impl.source.tree.JavaElementType.CODE_BLOCK as JAVA_CODE_BLOCK
 import com.intellij.psi.util.elementType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.annotations.NotNull
-import org.jetbrains.kotlin.KtNodeTypes.BLOCK
+import org.jetbrains.kotlin.KtNodeTypes.BLOCK as KOTLIN_CODE_BLOCK
 import java.util.Deque
 import java.util.LinkedList
 import java.util.regex.Pattern
@@ -24,8 +24,19 @@ class FoldingBuilder : FoldingBuilderEx(), DumbAware {
     private val givenCommentPattern = Pattern.compile("// [Gg]iven")
     private val whenCommentPattern = Pattern.compile("// [Ww]hen")
     private val thenCommentPattern = Pattern.compile("// [Tt]hen")
-    private val blockStarters = arrayOf(givenCommentPattern, thenCommentPattern)
-    private val blockStoppers = arrayOf(givenCommentPattern, whenCommentPattern, thenCommentPattern)
+
+    private val arrangeCommentPattern = Pattern.compile("// [Aa]rrange")
+    private val actCommentPattern = Pattern.compile("// [Aa]ct")
+    private val assertCommentPattern = Pattern.compile("// [Aa]ssert")
+
+    private val regionStarters = arrayOf(
+        givenCommentPattern, thenCommentPattern,
+        arrangeCommentPattern, assertCommentPattern
+    )
+    private val regionStoppers = arrayOf(
+        givenCommentPattern, whenCommentPattern, thenCommentPattern,
+        arrangeCommentPattern, actCommentPattern, assertCommentPattern
+    )
 
     override fun buildFoldRegions(root: PsiElement, document: Document, quick: Boolean): Array<FoldingDescriptor> {
         val descriptors: MutableList<FoldingDescriptor> = ArrayList()
@@ -36,10 +47,10 @@ class FoldingBuilder : FoldingBuilderEx(), DumbAware {
 
                 if (
                     element is PsiComment
-                    && isInsideMethod(element)
-                    && blockStarters.anyMatch(element.text)
+                    && isInsideCodeBlock(element)
+                    && regionStarters.anyMatch(element.text)
                 ) {
-                    findBlockEndElement(element)
+                    findRegionEndElement(element)
                         ?.let { endElement ->
                             FoldingDescriptor(
                                 element,
@@ -57,12 +68,14 @@ class FoldingBuilder : FoldingBuilderEx(), DumbAware {
         return descriptors.toTypedArray<FoldingDescriptor>()
     }
 
-    private fun isInsideMethod(element: PsiElement) = element.parent?.elementType
-        .let { it == CODE_BLOCK || it == BLOCK }
+    private fun isInsideCodeBlock(element: PsiElement): Boolean {
+        return element.parent?.elementType
+            .let { it == JAVA_CODE_BLOCK || it == KOTLIN_CODE_BLOCK }
+    }
 
     private fun Array<Pattern>.anyMatch(target: String) = any { it.matcher(target).matches() }
 
-    private fun findBlockEndElement(startComment: PsiComment): PsiElement? {
+    private fun findRegionEndElement(startComment: PsiComment): PsiElement? {
         val passedElements: Deque<PsiElement> = LinkedList()
         passedElements.push(startComment)
         var currentElement = startComment.nextSibling
@@ -70,21 +83,25 @@ class FoldingBuilder : FoldingBuilderEx(), DumbAware {
         while (currentElement != null) {
             passedElements.push(currentElement)
             if (currentElement is PsiComment) {
-                if (blockStoppers.anyMatch(currentElement.text)) {
-                    return findBlockEndElement(passedElements)
+                if (regionStoppers.anyMatch(currentElement.text)) {
+                    return findRegionEndElement(passedElements)
                 }
             }
             currentElement = currentElement.nextSibling
         }
 
-        return findBlockEndElement(passedElements)
+        return findRegionEndElement(passedElements)
     }
 
-    private fun findBlockEndElement(passedElements: Deque<PsiElement>): PsiElement? {
-        return passedElements.pop()
+    private fun findRegionEndElement(passedElements: Deque<PsiElement>): PsiElement? {
+        return passedElements
             .also { if (passedElements.isEmpty()) return null }
             .let { passedElements.pop() }
-            .also { if (it is PsiWhiteSpace) return passedElements.pop() }
+            .also { if (passedElements.isEmpty()) return null }
+            .let { passedElements.pop() }
+            .also { if (it !is PsiWhiteSpace) return it }
+            .also { if (passedElements.isEmpty()) return null }
+            .let { passedElements.pop() }
     }
 
     override fun getPlaceholderText(p0: ASTNode) = null
