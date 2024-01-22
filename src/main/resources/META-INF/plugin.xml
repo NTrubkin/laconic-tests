@@ -14,7 +14,7 @@
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description>
-        Intellij Idea plugin which makes the test regions in unit tests collapsible.
+        Makes the test regions in unit tests collapsible.
         Supports Given-When-Then and Arrange-Act-Assert.
         Doesn't collapse middle block intentionally to encourage the programmer to make it smaller.
     </description>
