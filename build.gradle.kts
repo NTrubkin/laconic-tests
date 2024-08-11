@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.ntrubkin"
-version = "0.1"
+version = "0.2"
 
 repositories {
     mavenCentral()
@@ -18,6 +18,8 @@ intellij {
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin"))
+
+    updateSinceUntilBuild.set(false)
 }
 
 tasks {
@@ -27,11 +29,6 @@ tasks {
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
-    }
-
-    patchPluginXml {
-        sinceBuild.set("231")
-        untilBuild.set("241.*")
     }
 
     signPlugin {
