@@ -9,15 +9,14 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.impl.source.tree.JavaElementType.CODE_BLOCK as JAVA_CODE_BLOCK
 import com.intellij.psi.util.elementType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.annotations.NotNull
-import org.jetbrains.kotlin.KtNodeTypes.BLOCK as KOTLIN_CODE_BLOCK
-import java.util.Deque
-import java.util.LinkedList
+import java.util.*
 import java.util.regex.Pattern
+import com.intellij.psi.impl.source.tree.JavaElementType.CODE_BLOCK as JAVA_CODE_BLOCK
+import org.jetbrains.kotlin.BlockExpressionElementType as KOTLIN_CODE_BLOCK
 
 class FoldingBuilder : FoldingBuilderEx(), DumbAware {
 
@@ -70,7 +69,7 @@ class FoldingBuilder : FoldingBuilderEx(), DumbAware {
 
     private fun isInsideCodeBlock(element: PsiElement): Boolean {
         return element.parent?.elementType
-            .let { it == JAVA_CODE_BLOCK || it == KOTLIN_CODE_BLOCK }
+            .let { it == JAVA_CODE_BLOCK || it is KOTLIN_CODE_BLOCK }
     }
 
     private fun Array<Pattern>.anyMatch(target: String) = any { it.matcher(target).matches() }
