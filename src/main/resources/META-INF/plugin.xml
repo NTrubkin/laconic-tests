@@ -8,9 +8,7 @@
     <name>Laconic Tests</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="trubkin.nikita@yandex.ru" >Nikita Trubkin</vendor>
-
-    <idea-version since-build="231"/>
+    <vendor email="trubkin.nikita@yandex.ru">Nikita Trubkin</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
@@ -32,5 +30,9 @@
     <extensions defaultExtensionNs="com.intellij">
         <lang.foldingBuilder implementationClass="ru.ntrubkin.laconic.tests.FoldingBuilder" language="JAVA"/>
         <lang.foldingBuilder implementationClass="ru.ntrubkin.laconic.tests.FoldingBuilder" language="kotlin"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <org.jetbrains.kotlin.supportsKotlinPluginMode supportsK2="true"/>
     </extensions>
 </idea-plugin>
